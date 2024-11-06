@@ -42,6 +42,7 @@ class Stream:
 _streams: List[Stream] = []
 
 @app.get("/sse/host")
+
 async def sse(request: Request, stream: Stream = Depends()) -> EventSourceResponse:
     stream = Stream()
     query_params = request.query_params.get('param', 'No params')
