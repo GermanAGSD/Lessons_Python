@@ -6,9 +6,10 @@ class Point:
         self._y = y
 
     def set_coords(self, x, y):
-        # Private __
-        self.__x = x
-        self.__y = y
+        if type(x) in (int, float) and type(y) in (int, float):
+            # Private __
+            self.__x = x
+            self.__y = y
 
     def get_coords(self):
         return self.__x, self.__y

@@ -5,10 +5,29 @@ from typing import List
 import uvicorn
 from fastapi import Request
 from typing import List, Generator
-from typing import List, Dict
+from typing import List, Dict, Union
 from lessons_1 import ip_address
-
+import json
+from pydantic import BaseModel, EmailStr, Field
+from pydantic.types import conint
 app = FastAPI()
+
+class DataModel(BaseModel):
+    cykle: bool
+    url: str
+
+class MessageBase(BaseModel):
+    message: str
+    data: Union[DataModel, str]
+
+class MessageGetInfo(BaseModel):
+    message: str
+    data: str
+
+class MessageStop(BaseModel):
+    message: str
+    data: str
+
 
 class ConnectionManager:
     def __init__(self):
@@ -42,6 +61,17 @@ class ConnectionManager:
             query_params = self.connection_params.get(connection, "No params")
             print(f"Client connected with query parameters: {query_params}")
 
+    async def send_json_message(self, websocket: WebSocket, message: str, data: str):
+        payload = json.dumps({"message": message, "data": data})
+        await websocket.send_text(payload)
+
+    async def send_json_message2(self, websocket: WebSocket, message: str, data: Union[DataModel, str]):
+    # Если data является экземпляром DataModel, преобразуем его в словарь
+        if isinstance(data, DataModel):
+            data = data.dict()
+        payload = json.dumps({"message": message, "data": data})
+        await websocket.send_text(payload)
+
 manager = ConnectionManager()
 
 ipaddress = []
@@ -53,31 +83,40 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             # Получение сообщения от клиента
             data = await websocket.receive_text()
-            pravila(data)
+
             query_params = manager.connection_params.get(websocket, "No params")
             print(f"Received from client: {data} - host: {websocket.client.host, websocket.client.port}: param: {query_params}")
             # Отправка ответа всем подключенным клиентам
             await manager.send_personal_message(websocket, f"Server received: {data}")
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-@app.post("/send_message")
-async def send_message(request: Request):
-    try:
-        body = await request.json()
-    except ValueError:
-        return {"error": "Invalid JSON"}
 
-    message = body.get("message")
-    if message:
-        await manager.broadcast(message)
+
+
+
+@app.post("/getinfo")
+async def get_info(msg: MessageGetInfo):
+    if msg.message and msg.data:
+        for connection in manager.active_connections:
+            await manager.send_json_message(connection, msg.message, msg.data)
         return {"status": "Message sent"}
-    return {"error": "Message not provided"}
+    return {"error": "Message or data not provided"}
 
-def pravila(message):
-    if(message == "message"):
-        print("Правила работают от Dart client")
-    elif(message == "Pravila"):
-        print("Правила работают от Python client")
+@app.post("/play")
+async def play_funct(msg: MessageBase):
+    if msg.message and msg.data:
+        for connection in manager.active_connections:
+            await manager.send_json_message2(connection, msg.message, msg.data)
+        return {"status": "Message sent"}
+    return {"error": "Message or data not provided"}
+
+@app.post("/stop")
+async def stop_funct(msg: MessageStop):
+    if msg.message and msg.data:
+        for connection in manager.active_connections:
+            await manager.send_json_message(connection, msg.message, msg.data)
+        return {"status": "Message sent"}
+    return {"error": "Message or data not provided"}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="localhost", port=8001)
+    uvicorn.run(app, host="192.168.1.100", port=8001)
