@@ -12,11 +12,10 @@ from starlette import status
 app = FastAPI()
 
 class DataModel(BaseModel):
-    cykle: bool
-    url: str
+    urls: str
 
 class MessageBase(BaseModel):
-    message: str
+    event: str
     data: Union[DataModel, str]
 
 class MessageGetInfo(BaseModel):
@@ -79,14 +78,17 @@ async def sse(request: Request, stream: Stream = Depends()) -> EventSourceRespon
     return EventSourceResponse(stream, headers={'Cache-Control': 'no-store'})
 
 @app.post("/message", status_code=status.HTTP_201_CREATED)
-async def send_message(hosts: str, data: str, event: str, stream: Stream = Depends()) -> None:
-    host_list = [host.strip() for host in hosts.split(',')]
+async def send_message(message: MessageBase, stream: Stream = Depends()) -> None:
     for stream in _streams:
-        if stream.query_params in host_list:
-            await stream.asend(
-                ServerSentEvent(data=data, event=event)
-            )
-
+        await stream.asend(
+            ServerSentEvent(data=message.data, event=message.event)
+        )
+@app.post("/setvol", status_code=status.HTTP_201_CREATED)
+async def setvol(data: str, event: str, stream: Stream = Depends()) -> None:
+    for stream in _streams:
+        await stream.asend(
+            ServerSentEvent(data=data, event=event)
+        )
 @app.get("/active_hosts")
 async def print_active_hosts():
     print("c", end="")
@@ -97,4 +99,4 @@ async def print_active_hosts():
     return {"status": "Hosts printed in console"}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8001)
+    uvicorn.run(app, host="192.168.1.100", port=8001)
