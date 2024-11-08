@@ -148,7 +148,7 @@ async def stopVideo(stop: StopModel, stream: Stream = Depends()) -> None:
 #
 @app.get("/gethosts", status_code=status.HTTP_200_OK)
 def get_hosts(db: Session = Depends(get_db)):
-    result = db.query(Models.Hosts.params).all()
+    result = db.query(Models.Hosts).all()
     return result
 
 @app.post("/hosts", status_code=status.HTTP_201_CREATED)
