@@ -2,6 +2,7 @@ class Vector:
     MAX_COORD = 100
     MIN_COORD = 0
 
+    # Метод класса cls - ссылка на текущий класс
     @classmethod
     def validate(cls, arg):
         return cls.MIN_COORD <= arg <= cls.MAX_COORD
@@ -14,7 +15,7 @@ class Vector:
 
     def get_coords(self):
         return self.x, self.y
-
+    # Статический метод
     @staticmethod
     def norm2(x, y):
         return x*x + y*y

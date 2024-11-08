@@ -1,24 +1,32 @@
 from traceback import print_exc
-
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from typing import List
+from fastapi import FastAPI, Request, Depends
+from sse_starlette.sse import EventSourceResponse, ServerSentEvent
+from typing import List, Dict, Union, Generator
 import uvicorn
-from fastapi import Request
-from typing import List, Generator
-from typing import List, Dict, Union
-from lessons_1 import ip_address
 import json
-from pydantic import BaseModel, EmailStr, Field
+import asyncio
+from pydantic import BaseModel
 from pydantic.types import conint
+from starlette import status
 app = FastAPI()
 
-class DataModel(BaseModel):
-    cykle: bool
-    url: str
+# 1 - true
+class StopModel(BaseModel):
+    stop: int
 
-class MessageBase(BaseModel):
-    message: str
-    data: Union[DataModel, str]
+class PlayModel(BaseModel):
+    urls: str
+
+class MessagePlay(BaseModel):
+    event: str
+    data: Union[PlayModel, str]
+
+class SetvolModel(BaseModel):
+    volume: float
+
+class MessageSetvol(BaseModel):
+    event: str
+    data: Union[SetvolModel, str]
 
 class MessageGetInfo(BaseModel):
     message: str
@@ -28,95 +36,90 @@ class MessageStop(BaseModel):
     message: str
     data: str
 
+class Stream:
+    def __init__(self) -> None:
+        self._queue = None
 
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: List[WebSocket] = []
-        self.connection_params: Dict[WebSocket, str] = {}
+    async def initialize_queue(self):
+        # Создаем очередь в асинхронной функции, где есть цикл событий
+        self._queue = asyncio.Queue[ServerSentEvent]()
 
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
-        self.connection_params[websocket] = websocket.url.query
-        self.log_active_connections()
+    def __aiter__(self) -> "Stream":
+        return self
 
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
-        if websocket in self.connection_params:
-            del self.connection_params[websocket]
-        self.log_active_connections()
+    async def __anext__(self) -> ServerSentEvent:
+        if self._queue is None:
+            raise RuntimeError("Queue not initialized. Call initialize_queue() first.")
+        return await self._queue.get()
 
-    async def broadcast(self, message: str):
-        for connection in self.active_connections:
-            await connection.send_text(message)
+    async def asend(self, value: ServerSentEvent) -> None:
+        if self._queue is None:
+            raise RuntimeError("Queue not initialized. Call initialize_queue() first.")
+        await self._queue.put(value)
 
-    async def send_personal_message(self, websocket: WebSocket, message: str):
-        await websocket.send_text(message)
+_streams: List[Stream] = []
 
-    def log_active_connections(self):
-        # Очистка консольного вывода перед отображением новых активных соединений
-        print("\033c", end="")
-        print(f"Active connections: {len(self.active_connections)}")
-        for connection in self.active_connections:
-            query_params = self.connection_params.get(connection, "No params")
-            print(f"Client connected with query parameters: {query_params}")
+@app.get("/sse/host")
+async def sse(request: Request) -> EventSourceResponse:
+    stream = Stream()
+    await stream.initialize_queue()
+    query_params = request.query_params.get('param', 'No params')
+    stream.client_ip = request.client.host
+    stream.query_params = query_params
+    _streams.append(stream)
+    print(f"Client connected: IP address: {stream.client_ip}, Query params: {stream.query_params}")
 
-    async def send_json_message(self, websocket: WebSocket, message: str, data: str):
-        payload = json.dumps({"message": message, "data": data})
-        await websocket.send_text(payload)
+    async def event_generator():
+        try:
+            async for event in stream:
+                yield event
+        except asyncio.CancelledError:
+            _streams.remove(stream)
+            print(f"Client disconnected: IP address: {stream.client_ip}, Query params: {stream.query_params}")
+            raise
 
-    async def send_json_message2(self, websocket: WebSocket, message: str, data: Union[DataModel, str]):
-    # Если data является экземпляром DataModel, преобразуем его в словарь
-        if isinstance(data, DataModel):
-            data = data.dict()
-        payload = json.dumps({"message": message, "data": data})
-        await websocket.send_text(payload)
+    return EventSourceResponse(event_generator(), headers={'Cache-Control': 'no-store'})
 
-manager = ConnectionManager()
+@app.post("/message", status_code=status.HTTP_201_CREATED)
+async def send_message(host: str, data: str, event: str) -> None:
+    for stream in _streams:
+        if stream.query_params == host:
+            await stream.asend(
+                ServerSentEvent(data=data, event=event)
+            )
 
-ipaddress = []
+@app.post("/setvol", status_code=status.HTTP_201_CREATED)
+async def setvol(host: str, data: SetvolModel, event: str) -> None:
+    for stream in _streams:
+        if stream.query_params == host:
+            await stream.asend(
+                ServerSentEvent(data=str(data.volume), event=event)
+            )
 
-@app.websocket("/ws/host")
-async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
-    try:
-        while True:
-            # Получение сообщения от клиента
-            data = await websocket.receive_text()
+@app.post("/play", status_code=status.HTTP_201_CREATED)
+async def playVideo(host: str, play: PlayModel, event: str) -> None:
+    for stream in _streams:
+        if stream.query_params == host:
+            await stream.asend(
+                ServerSentEvent(data=play.urls, event=event)
+            )
 
-            query_params = manager.connection_params.get(websocket, "No params")
-            print(f"Received from client: {data} - host: {websocket.client.host, websocket.client.port}: param: {query_params}")
-            # Отправка ответа всем подключенным клиентам
-            await manager.send_personal_message(websocket, f"Server received: {data}")
-    except WebSocketDisconnect:
-        manager.disconnect(websocket)
+@app.post("/stop", status_code=status.HTTP_201_CREATED)
+async def stopVideo(host: str, stop: StopModel) -> None:
+    for stream in _streams:
+        if stream.query_params == host:
+            await stream.asend(
+                ServerSentEvent(data=str(stop.stop), event="stop")
+            )
 
-
-
-
-@app.post("/getinfo")
-async def get_info(msg: MessageGetInfo):
-    if msg.message and msg.data:
-        for connection in manager.active_connections:
-            await manager.send_json_message(connection, msg.message, msg.data)
-        return {"status": "Message sent"}
-    return {"error": "Message or data not provided"}
-
-@app.post("/play")
-async def play_funct(msg: MessageBase):
-    if msg.message and msg.data:
-        for connection in manager.active_connections:
-            await manager.send_json_message2(connection, msg.message, msg.data)
-        return {"status": "Message sent"}
-    return {"error": "Message or data not provided"}
-
-@app.post("/stop")
-async def stop_funct(msg: MessageStop):
-    if msg.message and msg.data:
-        for connection in manager.active_connections:
-            await manager.send_json_message(connection, msg.message, msg.data)
-        return {"status": "Message sent"}
-    return {"error": "Message or data not provided"}
+@app.get("/active_hosts")
+async def print_active_hosts():
+    print("\033c", end="")
+    print(f"Active connections: {len(_streams)}")
+    for idx, stream in enumerate(_streams, start=1):
+        client_ip = getattr(stream, 'client_ip', 'Unknown')
+        print(f"Host {idx}: IP address: {client_ip}, Query params: {getattr(stream, 'query_params', 'No params')}")
+    return {"status": "Hosts printed in console"}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="192.168.1.100", port=8001)
+    uvicorn.run(app, host="192.168.220.119", port=8001)
