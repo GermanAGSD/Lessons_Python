@@ -223,7 +223,7 @@ async def receive_data(request: Request):
         return {"error": f"Invalid data: {e}"}
 
     # Выводим полученные данные и их атрибуты в консоль
-    print(f"Received data from client  - duration: {client_data.duration}, position: {client_data.position}, volume: {client_data.volume}, status: {client_data.status}")
+    print(f"Received data from client {query_params} - duration: {client_data.duration}, position: {client_data.position}, volume: {client_data.volume}, status: {client_data.status}")
 
     return {"status": "Data received successfully"}
 if __name__ == "__main__":
