@@ -20,6 +20,10 @@ class StopModel(BaseModel):
 
 class PlayModel(BaseModel):
     urls: str
+# Модель для представления массива видео
+
+class VideoListModel(BaseModel):
+    urls: List[PlayModel]
 
 class MessagePlay(BaseModel):
     event: str
@@ -43,6 +47,12 @@ class MessageStop(BaseModel):
 
 class HostCreate(BaseModel):
     params: str
+
+# Модель для данных, которые будут приходить от клиента через POST запрос
+class ClientDataModel(BaseModel):
+    param: str
+    message: str
+    data: Union[str, dict]
 
 class Stream:
     def __init__(self) -> None:
@@ -74,7 +84,6 @@ def regist_host(parammetr, db: Session):
 
 
 @app.get("/sse/host")
-
 async def sse(request: Request, db: Session = Depends(get_db),stream: Stream = Depends()) -> EventSourceResponse:
     stream = Stream()
     query_params = request.query_params.get('param', 'No params')
@@ -160,14 +169,62 @@ def create_host(host: HostCreate, db: Session = Depends(get_db)):
     new_host = Models.Hosts(params=host.params)
     db.add(new_host)
     return {"id": new_host.id, "params": new_host.params, "created_at": new_host.created_at}
+
+# Новый эндпоинт для получения данных от клиента с использованием POST
+@app.post("/send_data", status_code=status.HTTP_200_OK)
+async def receive_data(data: ClientDataModel):
+    """
+    Получение данных от клиента через POST запрос и вывод их в консоль.
+    """
+    # Выводим полученные данные в консоль
+    print(f"Received data from client: Param={data.param}, Message={data.message}, Data={data.data}")
+
+    # Здесь можно добавить логику для обработки данных,
+    # например, сохранение в базе данных или отправка другим клиентам по желанию.
+
+    return {"status": "Data received successfully"}
+
+
+
+
 @app.get("/active_hosts")
 async def print_active_hosts():
     print("c", end="")
     print(f"Active connections: {len(_streams)}")
+    query_params_list = []
     for idx, stream in enumerate(_streams, start=1):
         client_ip = getattr(stream, 'client_ip', 'Unknown')
         print(f"Host {idx}: IP address: {client_ip}, Query params: {getattr(stream, 'query_params', 'No params')}")
-    return {"status": "Hosts printed in console"}
+        query_params = getattr(stream, 'query_params', 'No params')
+        query_params_list.append(query_params)
+    return {"status": query_params_list}
 
+
+# Новый эндпоинт для получения данных от клиента с использованием POST
+class ClientDataModel(BaseModel):
+    duration: int
+    position: int
+    volume: int
+    status: str
+
+@app.post("/receive_data/host", status_code=status.HTTP_200_OK)
+async def receive_data(request: Request):
+    """
+    Получение необработанных данных от клиента через POST запрос и вывод их в консоль.
+    """
+    # Получаем JSON-данные из тела запроса
+    query_params = request.query_params.get('param', 'No param provided')
+    data = await request.json()
+
+    # Парсинг JSON-данных в модель Pydantic
+    try:
+        client_data = ClientDataModel(**data)
+    except ValueError as e:
+        return {"error": f"Invalid data: {e}"}
+
+    # Выводим полученные данные и их атрибуты в консоль
+    print(f"Received data from client  - duration: {client_data.duration}, position: {client_data.position}, volume: {client_data.volume}, status: {client_data.status}")
+
+    return {"status": "Data received successfully"}
 if __name__ == "__main__":
     uvicorn.run(app, host="192.168.1.100", port=8001)
