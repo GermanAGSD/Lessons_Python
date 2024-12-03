@@ -1,8 +1,6 @@
 import asyncio
 import websockets
 
-from lessons_1 import names
-
 
 async def hello(websocket):
     name = await websocket.recv()

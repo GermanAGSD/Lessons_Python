@@ -145,3 +145,12 @@ def descriminant(a, b, c):
     return decr
 result = descriminant(2,4,2)
 print(result)
+
+# Множества Set frozenset
+a = set('abracadabra') # Дубликаты будут удалены
+print(a)
+a.add('z')
+print(a)
+b = frozenset('asdfagsa')
+print(b)
+

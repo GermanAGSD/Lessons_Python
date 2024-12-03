@@ -1,5 +1,6 @@
 from idlelib.debugger_r import close_subprocess_debugger
-# Магические методы __setattr и тд
+# Магические методы __setattr и тд  Этот метод возникает каждый раз ,
+# когда происходит попытка получить значение атрибута объекта, независимо от того, существует ли этот атрибут в объекте.
 from accessify import private, protected
 
 class Point:
