@@ -6,12 +6,12 @@ from accessify import private, protected
 class Point:
     MAX_COORD = 100
     MIN_COORD = 0
-    def __init__(self, x = 0, y = 0):
+    def __init__(self, x, y):
         # Protected _
         self.__x = self.__y = 0
         if self.check_value(x) and self.check_value(y):
-            self._x = x
-            self._y = y
+            self.__x = x
+            self.__y = y
             
     @private
     @classmethod
@@ -19,13 +19,12 @@ class Point:
         return type(x) in (int, float)
 
     def set_coords(self, x, y):
-        if self.check_value(x) and self.check_value(y) and self.MIN_COORD <= x <= self.MAX_COORD :
+        if self.check_value(x) and self.check_value(y) and self.MIN_COORD <= x <= self.MAX_COORD and self.MIN_COORD <= y <= self.MAX_COORD :
             # Private __
             self.__x = x
             self.__y = y
-
         else:
-            raise ValueError("Координаты должны быть числами")
+            raise ValueError("Координаты должны быть числами и в диапазоне от 0 - 100")
 
     # Если функция принимает self то значение класса не меняется, только локальное свойство
     # Если функция принимает cls то переменная класса будет изменена на то значение которым иницилизируется
@@ -50,7 +49,7 @@ class Point:
     def __getattribute__(self, item):
         print("__getattribute__")
         # Запретить обращаться к аттрибуту x
-        if item == "_x":
+        if item == "_x" and item == '_y':
             raise ValueError("Доступ запрещен")
         else:
             return object.__getattribute__(self, item)
@@ -72,10 +71,12 @@ class Point:
         object.__delattr__(self, item)
 
 pt = Point(1,2)
-pt.set_coords(10,20)
+pt.set_coords(10,100)
 pt.set_bound_Min_or_Max(101, -100)
-print(pt.y)
+# pt.z = 10
+pt.__x = 19
+print(pt._y)
 print(pt.validata(102))
 print(pt.__dict__)
 print(Point.__dict__)
-del pt._x
+del pt.__x

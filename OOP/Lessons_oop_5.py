@@ -3,6 +3,7 @@ class Vector:
     MIN_COORD = 0
 
     # Метод класса cls - ссылка на текущий класс
+    # можно обращаться к атрибутам класса например MAX_COORD
     @classmethod
     def validate(cls, arg):
         return cls.MIN_COORD <= arg <= cls.MAX_COORD
@@ -15,7 +16,7 @@ class Vector:
 
     def get_coords(self):
         return self.x, self.y
-    # Статический метод
+    # Статический метод не имеет доступа ни к атрибутам класса
     @staticmethod
     def norm2(x, y):
         return x*x + y*y
@@ -27,9 +28,3 @@ res = v.get_coords()
 print(Vector.norm2(5,6))
 print(res)
 
-# if __name__ == "__main__":
-#     v = Vector(1,2)
-#     res = v.get_coords()
-#     print(res)
-
-    # uvicorn.run(app, host="localhost", port=8001)

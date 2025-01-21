@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from starlette import status
 
 from ClietnWebSocket import pravila
+from PythonBasic.lessons_1 import result
 from SSE.Models import Models
 from SSE.Database.DataBaseSqlAlchemy import engine, get_db
 from SSE.Database.DataBaseSqlAlchemyAsync import get_db_async
@@ -24,6 +25,16 @@ from fastapi.security import OAuth2PasswordBearer
 Models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
+class ParamsOut(BaseModel):
+    params: str
+
+class CommentsOut(BaseModel):
+    id: int
+    post: str
+    likescount: int
+
+    class Config:
+        orm_mode = True  # Позволяет Pydantic работать с объектами SQLAlchemy
 
 class Address(BaseModel):
     street: str = Field(..., description="The street name of the company address")
@@ -45,8 +56,11 @@ class GetHost(BaseModel):
 class StopModel(BaseModel):
     stop: int
 
+class PlayUrls(BaseModel):
+    url: str
+
 class PlayModel(BaseModel):
-    urls: str
+    urls: List[PlayUrls]
 # Модель для представления массива видео
 
 class VideoListModel(BaseModel):
@@ -113,6 +127,12 @@ class Stream:
         await self._queue.put(value)
 
 _streams: List[Stream] = []
+
+
+@app.get("/comment", response_model=List[CommentsOut])
+def getComment(db: Session = Depends(get_db)):
+    result = db.query(Models.Comment).all()
+    return result
 
 
 # Добавим функцию для регистрации новых устройств в базе данных
@@ -211,7 +231,7 @@ async def setvol(host: str, data: SetvolModel, stream: Stream = Depends()) -> No
     for stream in _streams:
         if stream.query_params == host:
             await stream.asend(
-                ServerSentEvent(data=data.json(), event="setvol")
+                ServerSentEvent(data=data.model_dump_json(), event="setvol")
             )
 
 @app.post("/play", status_code=status.HTTP_200_OK)
@@ -271,52 +291,53 @@ async def stopVideo(host: str, stop: StopModel, stream: Stream = Depends()) -> N
     jsstr = {
         "stop": 0
     }
-    js = json.dumps(jsstr);
+    js = json.dumps(jsstr)
     for stream in _streams:
         if stream.query_params == host:
             await stream.asend(
                 ServerSentEvent(event="stop", data=js)
             )
 
-# @app.get("/gethosts")
-# def get_hosts(dbs: Session = Depends(get_db_async())):
-#     result = dbs.query(Models.Hosts).all()
-#     return result
-#
+@app.get("/gethosts", response_model=List[ParamsOut])
+def get_hosts(db: Session = Depends(get_db)):
+    result = db.query(Models.Hosts).all()
+    return result
+
+
 # Асинхронная функция для выполнения SQL-запроса
 # Асинхронная функция для получения хостов
 # Асинхронная функция для получения хостов
-async def fetch_hosts(dbs: AsyncSession):
-    result = await dbs.execute(select(Models.Hosts))
-    hosts = result.scalars().all()
-    return hosts
-
-# Синхронная функция, которая может выполняться в пуле потоков
-def process_host_data_sync(data):
-    # Представьте, что здесь сложная обработка данных
-    for host in data:
-        process_data = [f"Processed: {host.params} - {host.name} - {host.region}"]
-    # processed_data = [f"Processed: {host.params} - {host.name} - {host.region}" for host in data]
-
-    return data
-
-@app.get("/gethosts")
-async def get_hosts(dbs: AsyncSession = Depends(get_db_async)):
-    try:
-        # Попытка выполнения запроса
-        hosts = await fetch_hosts(dbs)
-    except DBAPIError as e:
-        # Обработка потери соединения
-        print(f"Database error occurred: {e}")
-        # Можете попробовать переподключиться или вернуть сообщение об ошибке
-        return {"error": "Database connection issue, please try again later."}
-
-    # Логика обработки данных, если соединение не было потеряно
-    loop = asyncio.get_event_loop()
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        processed_hosts = await loop.run_in_executor(executor, process_host_data_sync, hosts)
-
-    return {"hosts": processed_hosts}
+# async def fetch_hosts(dbs: AsyncSession):
+#     result = await dbs.execute(select(Models.Hosts))
+#     hosts = result.scalars().all()
+#     return hosts
+#
+# # Синхронная функция, которая может выполняться в пуле потоков
+# def process_host_data_sync(data):
+#     # Представьте, что здесь сложная обработка данных
+#     for host in data:
+#         process_data = [f"Processed: {host.params} - {host.name} - {host.region}"]
+#     # processed_data = [f"Processed: {host.params} - {host.name} - {host.region}" for host in data]
+#
+#     return data
+#
+# @app.get("/get_hosts_async")
+# async def get_hosts_async(dbs: AsyncSession = Depends(get_db_async)):
+#     try:
+#         # Попытка выполнения запроса
+#         hosts = await fetch_hosts(dbs)
+#     except DBAPIError as e:
+#         # Обработка потери соединения
+#         print(f"Database error occurred: {e}")
+#         # Можете попробовать переподключиться или вернуть сообщение об ошибке
+#         return {"error": "Database connection issue, please try again later."}
+#
+#     # Логика обработки данных, если соединение не было потеряно
+#     loop = asyncio.get_event_loop()
+#     with ThreadPoolExecutor(max_workers=5) as executor:
+#         processed_hosts = await loop.run_in_executor(executor, process_host_data_sync, hosts)
+#
+#     return {"hosts": processed_hosts}
 @app.post("/hosts", status_code=status.HTTP_201_CREATED)
 def create_host(host: HostCreate, db: Session = Depends(get_db)):
     new_host = Models.Hosts(params=host.params)
@@ -450,4 +471,4 @@ async def login(userlog: UserCreate, db: Session = Depends(get_db)):
     }
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="192.168.1.100", port=8002)
+    uvicorn.run(app, host="192.168.1.100", port=8001)

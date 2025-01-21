@@ -3,8 +3,8 @@ from accessify import private, protected
 
 # Property - Свойства
 class Person:
-    name = ''
-    old = 0
+    __name = ''
+    __old = 0
 
     def __init__(self, name, old):
         self.__name = name
@@ -17,11 +17,14 @@ class Person:
     @get_old.setter
     def set_old(self, old):
         self.__old = old
-
+    @get_old.deleter
+    def old(self):
+        del self.__old
 
 
 p = Person("German", 28)
 p2 = Person("German", 29)
-# p.get_old(35)
+print(p.get_old)
+print(p2.get_old)
 #
 print(p.get_old, p.__dict__)

@@ -11,7 +11,7 @@ from array_lessons import json_string
 
 
 class Person:
-    S_RUS = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
+    S_RUS = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя-'
     S_RUS_UPPER = S_RUS.upper()
 
     def __init__(self, fio, old, ps, weight, password):
@@ -43,8 +43,9 @@ class Person:
         json_str = self.to_dict()
         return json.dumps(json_str, ensure_ascii=False, indent=4)
 
+    @private
     @classmethod
-    def hash_password(cls, password) -> str:
+    def hash_password(cls, password: str) -> str:
         sha256 = hashlib.sha256()
         sha256.update(password.encode("utf-8"))
         return sha256.hexdigest()
@@ -81,7 +82,7 @@ class Person:
             raise TypeError("Возраст должен быть в пределах 14 - 120")
 
     @classmethod
-    def verify_passport(cls, ps):
+    def verify_passport(cls, ps: str):
 
         if type(ps) != str:
             raise TypeError("Пасспорт должен быть строкой")

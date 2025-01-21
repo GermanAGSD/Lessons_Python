@@ -1,6 +1,6 @@
 from idlelib.debugger_r import close_subprocess_debugger
 from accessify import private, protected
-
+from typing import Any
 # Паттерн моносостояния
 class ThreadData:
 
@@ -21,8 +21,16 @@ class ThreadData:
     def print(self):
         return self.__shared_attrs__
 
+
+    def set_key(self, name: str, data: dict[Any], id: int) -> None:
+        self.__shared_attrs__['name'] = name
+        self.__shared_attrs__['data'] = data
+        self.__shared_attrs__['id'] = id
+
+
 th = ThreadData()
 th2 = ThreadData()
 th.id = 1
+th.set_key('german', ['data'], 1)
 print(th.print())
 print(th2.print())

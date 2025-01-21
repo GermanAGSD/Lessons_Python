@@ -6,7 +6,7 @@ from psycopg2.extras import RealDictCursor
 import time
 
 
-SQLALCHEMY_DATABASE_URL = f'postgresql://postgres:password123@193.124.35.115:5431/fastapi'
+SQLALCHEMY_DATABASE_URL = f'postgresql://postgres:password123@172.30.30.19:5430/react'
 
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
@@ -27,8 +27,8 @@ def get_db():
 while True:
 
     try:
-        conn = psycopg2.connect(host='193.124.35.115', database='fastapi', user='postgres',
-                                password='password123', port='5431', cursor_factory=RealDictCursor)
+        conn = psycopg2.connect(host='172.30.30.19', database='react', user='postgres',
+                                password='password123', port='5430', cursor_factory=RealDictCursor)
         cursor = conn.cursor()
         print("Database connection was succesfull!")
         break

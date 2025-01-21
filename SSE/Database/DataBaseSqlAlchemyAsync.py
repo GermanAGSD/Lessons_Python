@@ -5,7 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 # Используем asyncpg как драйвер для асинхронного взаимодействия с PostgreSQL
-SQLALCHEMY_DATABASE_URL = 'postgresql+asyncpg://postgres:password123@193.124.35.115:5431/fastapi'
+SQLALCHEMY_DATABASE_URL = 'postgresql+asyncpg://postgres:password123@172.30.30.19:5430/react'
 
 # Создаем асинхронный движок с использованием asyncpg
 engineasync = create_async_engine(SQLALCHEMY_DATABASE_URL,

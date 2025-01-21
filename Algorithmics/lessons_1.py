@@ -24,6 +24,7 @@ n = len(a)
 
 i = 0
 j = 0
+
 while i < n:
     if a[i] == t[j]:
         i += 1

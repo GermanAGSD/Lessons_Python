@@ -6,6 +6,7 @@ class Point:
     # cls ссылка на текущий экзепляр класса Point
     def __new__(cls, *args, **kwargs):
         print("Вызов new для" + str(cls))
+        # Адрес нового созданного объекта
         return super().__new__(cls)
 
     # self ссылается на создаваемый экзепляр класса

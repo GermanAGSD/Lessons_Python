@@ -5,6 +5,20 @@ from sqlalchemy.sql.sqltypes import TIMESTAMP
 from SSE.Database.DataBaseSqlAlchemy import Base
 
 
+class Comment(Base):
+    __tablename__ = "comment"
+
+    id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
+    post = Column(String, nullable=False)
+    likescount = Column(Integer, nullable=True)
+
+
+
+
+    created_at = Column(TIMESTAMP(timezone=True),
+                        nullable=False, server_default=text('now()'))
+
+
 class Hosts(Base):
     __tablename__ = "hosts"
 
