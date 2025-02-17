@@ -41,12 +41,12 @@ class Square(Reactangle):
 
 # Поскольку у квадрата равные стороны то передается s
 
-# class Square(Reactangle):
-#     def __init__(self,s):
-#         super().__init__(s,s)
-#         self.s = s
+class Square(Reactangle):
+    def __init__(self,s):
+        super().__init__(s,s)
+        self.s = s
 
-squ = Square(2, 2)
+squ = Square(2)
 
 print(squ.perimetr())
 print(issubclass(Square, Reactangle))

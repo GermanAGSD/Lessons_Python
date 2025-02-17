@@ -39,7 +39,7 @@ mes = map(operator.sub, measurement1, measurement2)
 print(list(mes))
 
 insect = ['fly', 'ant', 'beetle', 'cankeworm']
-f = lambda x: x + ' is an'
+f = lambda x: x + ' .3is an'
 sad = map(f, insect)
 print(list(sad))
 

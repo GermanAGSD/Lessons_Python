@@ -1,6 +1,6 @@
 import sqlite3
 
-def sqlite3Mod(databaseName, queryGet, queryPost = None):
+def sqlite3Mod(databaseName, queryGet = None, queryPost = None):
 
     try:
 
@@ -17,7 +17,8 @@ def sqlite3Mod(databaseName, queryGet, queryPost = None):
             if queryPost != None:
                 c.execute(queryPost)
                 conn.commit()
-            c.execute(queryGet)
+            if queryGet != None:
+                c.execute(queryGet)
             return c.fetchall()
         else:
             # Пробросить исключение для других ошибок
