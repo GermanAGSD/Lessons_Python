@@ -10,13 +10,14 @@ class Vector:
 
     def __init__(self, x ,y):
         self.x = self.y = 0
-        if Vector.validate(x) and Vector.validate(y):
+        if self.validate(x) and self.validate(y):
             self.x = x
             self.y = y
 
     def get_coords(self):
         return self.x, self.y
-    # Статический метод не имеет доступа ни к атрибутам класса
+
+    # Статический метод не имеет доступа ни к атрибутам класса ни к отребутам экз класса
     @staticmethod
     def norm2(x, y):
         return x*x + y*y
@@ -25,6 +26,6 @@ class Vector:
 v = Vector(1,2)
 print(Vector.validate(5))
 res = v.get_coords()
-print(Vector.norm2(5,6))
+print(v.norm2(5,6))
 print(res)
 

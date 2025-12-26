@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>6.0</version>
+    <templates>
+        <template>
+            <template>Template App RKeeperRefServer Service</template>
+            <name>Template App RKeeperRefServer Service</name>
+            <description>Monitors only the RKeeperRefServer_THEBULL Windows service.</description>
+            <groups>
+                <group>
+                    <name>Templates/Applications</name>
+                </group>
+            </groups>
+            <items>
+                <item>
+                    <name>Service RKeeperRefServer_THEBULL status</name>
+                    <key>service_state[RKeeperRefServer_THEBULL]</key>
+                    <type>AGENT</type>
+                    <value_type>UINT64</value_type>
+                    <delay>1m</delay>
+                    <history>7d</history>
+                    <trends>30d</trends>
+                    <tags>
+                        <tag>
+                            <tag>service</tag>
+                            <value>RKeeperRefServer_THEBULL</value>
+                        </tag>
+                    </tags>
+                </item>
+            </items>
+            <triggers>
+                <trigger>
+                    <expression>last(/&quot;Template App RKeeperRefServer Service&quot;/service_state[RKeeperRefServer_THEBULL])<>0</expression>
+                    <name>RKeeperRefServer_THEBULL service is not running</name>
+                    <priority>HIGH</priority>
+                    <description>Служба RKeeperRefServer_THEBULL остановлена или не отвечает. Ожидается состояние "запущена" (0).</description>
+                    <tags>
+                        <tag>
+                            <tag>availability</tag>
+                            <value></value>
+                        </tag>
+                    </tags>
+                </trigger>
+            </triggers>
+        </template>
+    </templates>
+</zabbix_export>

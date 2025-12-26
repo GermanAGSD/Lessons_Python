@@ -1,0 +1,22 @@
+zabbix_export:
+  version: '6.0'
+  date: '2025-10-02T00:00:00Z'
+  groups:
+    - name: Templates
+  templates:
+    - template: RKeeperRefServer Monitor
+      name: RKeeperRefServer Monitor
+      groups:
+        - name: Templates
+      items:
+        - name: RKeeperRefServer_THEBULL Status
+          type: 0                                # 0 = Zabbix agent
+          key: service.info[RKeeperRefServer_THEBULL]
+          delay: 30s
+          history: 7d
+          trends: 365d                           # допустимо, т.к. ниже числовой тип
+          value_type: 3                          # 3 = Numeric (unsigned)
+      triggers:
+        - name: RKeeperRefServer_THEBULL is not running
+          expression: '{RKeeperRefServer Monitor:service.info[RKeeperRefServer_THEBULL].last()}=0'
+          priority: 4                            # 4 = High

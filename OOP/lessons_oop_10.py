@@ -1,5 +1,5 @@
 import json
-from idlelib.debugger_r import close_subprocess_debugger
+
 from string import ascii_letters
 
 from accessify import private, protected
@@ -7,7 +7,6 @@ from accessify import private, protected
 # Property - Свойства
 from string import ascii_letters
 import hashlib
-from array_lessons import json_string
 
 
 class Person:
@@ -35,7 +34,7 @@ class Person:
             "fio": ' '.join(self.__fio),
             "old": self.__old,
             "passport": self.__passport,
-            "weigth": self.__weight,
+            "weight": self.__weight,
             "password": self.__password
         }
 
@@ -56,7 +55,9 @@ class Person:
         if type(fio) != str:
             raise TypeError("Fio not String")
 
+        # print(fio)
         f = fio.split()
+        # print(f)
         if len(f) != 3:
             raise TypeError("Formatted FIO = 3 object")
 
@@ -73,13 +74,13 @@ class Person:
 
     @classmethod
     def verify_old(cls, old):
-        if type(old) != int or old < 14 or old > 120:
+        if type(old) != int or old < 0 or old > 120:
             raise TypeError("Возраст должен быть в пределах 14 - 120")
 
     @classmethod
     def verify_weight(cls, w):
         if type(w) != int or w < 20:
-            raise TypeError("Возраст должен быть в пределах 14 - 120")
+            raise TypeError("Вес должен быть в пределах > 20")
 
     @classmethod
     def verify_passport(cls, ps: str):

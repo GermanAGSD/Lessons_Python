@@ -1,11 +1,12 @@
-from idlelib.debugger_r import close_subprocess_debugger
-# Магические методы __setattr и тд  Этот метод возникает каждый раз ,
+
+# Магические методы __setattr и тд  Этот метод возникает каждый раз
 # когда происходит попытка получить значение атрибута объекта, независимо от того, существует ли этот атрибут в объекте.
 from accessify import private, protected
 
 class Point:
     MAX_COORD = 100
     MIN_COORD = 0
+
     def __init__(self, x, y):
         # Protected _
         self.__x = self.__y = 0
@@ -47,12 +48,10 @@ class Point:
     # Автоматически вызывается при получении свойства класса с именем item
     # item атрибут к которому идет обращение
     def __getattribute__(self, item):
-        print("__getattribute__")
-        # Запретить обращаться к аттрибуту x
-        if item == "_x" and item == '_y':
+        print("__getattribute__", item)
+        if item in ("_Point__x", "_Point__y"):
             raise ValueError("Доступ запрещен")
-        else:
-            return object.__getattribute__(self, item)
+        return object.__getattribute__(self, item)
 
     def __setattr__(self, key, value):
         print("__setattr__")
@@ -61,7 +60,7 @@ class Point:
             raise AttributeError("недопустимое имя аттрибута")
         else:
             object.__setattr__(self, key, value)
-
+    # Если обращаться к несуществуемому аттрибуту то False
     def __getattr__(self, item):
         print("__getattr__" + item)
         return False
@@ -73,8 +72,9 @@ class Point:
 pt = Point(1,2)
 pt.set_coords(10,100)
 pt.set_bound_Min_or_Max(101, -100)
-# pt.z = 10
-pt.__x = 19
+pt.z = 10
+a = pt.__x = 19
+print(a)
 print(pt._y)
 print(pt.validata(102))
 print(pt.__dict__)

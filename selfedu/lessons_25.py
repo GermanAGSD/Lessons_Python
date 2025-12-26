@@ -20,7 +20,7 @@ def lessons_25_2():
             print(x, type(x), end=' ')
 
 
-# lessons_25_2()
+lessons_25_2()
 
 
 def lessons_25_3():

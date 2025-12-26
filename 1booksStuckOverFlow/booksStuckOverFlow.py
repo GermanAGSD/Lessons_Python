@@ -3,6 +3,14 @@ from array import array
 from functools import partial
 from operator import mul
 import operator
+import json
+
+dic = {'name': 'red', 'age': 10}
+json_str = json.dumps(dic)
+print(json_str)
+
+tuples = (123,'hello')
+print(tuples)
 
 t = {x for x in range(10) if x % 2 == 0}
 print(list(t))

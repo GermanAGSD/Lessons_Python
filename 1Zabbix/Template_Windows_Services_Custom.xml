@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>6.0</version>
+    <date>2025-10-01T00:00:00Z</date>
+    <groups>
+        <group>
+            <name>Templates/Applications</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template App Windows Services Custom</template>
+            <name>Template App Windows Services Custom</name>
+            <description>Monitor specific Windows services by exact ServiceName via service.info[&lt;name&gt;,state]. 0=Running, 1=Stopped, 2=Paused, etc.</description>
+            <groups>
+                <group>
+                    <name>Templates/Applications</name>
+                </group>
+            </groups>
+            <items>
+                <item>
+                    <name>Service {$SERVICE.NAME.1} status</name>
+                    <key>service.info[{$SERVICE.NAME.1},state]</key>
+                    <type>0</type>
+                    <value_type>3</value_type>
+                    <delay>1m</delay>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>service</value>
+                        </tag>
+                    </tags>
+                    <preprocessing>
+                        <step>
+                            <type>13</type>
+                            <parameters>
+                                <parameter>1h</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Service {$SERVICE.NAME.2} status</name>
+                    <key>service.info[{$SERVICE.NAME.2},state]</key>
+                    <type>0</type>
+                    <value_type>3</value_type>
+                    <delay>1m</delay>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>service</value>
+                        </tag>
+                    </tags>
+                    <preprocessing>
+                        <step>
+                            <type>13</type>
+                            <parameters>
+                                <parameter>1h</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Service {$SERVICE.NAME.3} status</name>
+                    <key>service.info[{$SERVICE.NAME.3},state]</key>
+                    <type>0</type>
+                    <value_type>3</value_type>
+                    <delay>1m</delay>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>service</value>
+                        </tag>
+                    </tags>
+                    <preprocessing>
+                        <step>
+                            <type>13</type>
+                            <parameters>
+                                <parameter>1h</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Service {$SERVICE.NAME.4} status</name>
+                    <key>service.info[{$SERVICE.NAME.4},state]</key>
+                    <type>0</type>
+                    <value_type>3</value_type>
+                    <delay>1m</delay>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>service</value>
+                        </tag>
+                    </tags>
+                    <preprocessing>
+                        <step>
+                            <type>13</type>
+                            <parameters>
+                                <parameter>1h</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Service {$SERVICE.NAME.5} status</name>
+                    <key>service.info[{$SERVICE.NAME.5},state]</key>
+                    <type>0</type>
+                    <value_type>3</value_type>
+                    <delay>1m</delay>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>service</value>
+                        </tag>
+                    </tags>
+                    <preprocessing>
+                        <step>
+                            <type>13</type>
+                            <parameters>
+                                <parameter>1h</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                </item>
+            </items>
+            <macros>
+                <macro>
+                    <macro>{$SERVICE.NAME.1}</macro>
+                    <value>Spooler</value>
+                </macro>
+                <macro>
+                    <macro>{$SERVICE.STATE.EXPECTED.1}</macro>
+                    <value>0</value>
+                </macro>
+
+                <macro>
+                    <macro>{$SERVICE.NAME.2}</macro>
+                    <value></value>
+                </macro>
+                <macro>
+                    <macro>{$SERVICE.STATE.EXPECTED.2}</macro>
+                    <value>0</value>
+                </macro>
+
+                <macro>
+                    <macro>{$SERVICE.NAME.3}</macro>
+                    <value></value>
+                </macro>
+                <macro>
+                    <macro>{$SERVICE.STATE.EXPECTED.3}</macro>
+                    <value>0</value>
+                </macro>
+
+                <macro>
+                    <macro>{$SERVICE.NAME.4}</macro>
+                    <value></value>
+                </macro>
+                <macro>
+                    <macro>{$SERVICE.STATE.EXPECTED.4}</macro>
+                    <value>0</value>
+                </macro>
+
+                <macro>
+                    <macro>{$SERVICE.NAME.5}</macro>
+                    <value></value>
+                </macro>
+                <macro>
+                    <macro>{$SERVICE.STATE.EXPECTED.5}</macro>
+                    <value>0</value>
+                </macro>
+            </macros>
+            <triggers>
+                <trigger>
+                    <expression>{Template App Windows Services Custom:service.info[{$SERVICE.NAME.1},state].last()}&lt;&gt;{$SERVICE.STATE.EXPECTED.1}</expression>
+                    <name>Service {$SERVICE.NAME.1} is not in expected state</name>
+                    <priority>4</priority>
+                    <description>Expected: {$SERVICE.STATE.EXPECTED.1}. Current: {ITEM.LASTVALUE}</description>
+                    <tags>
+                        <tag>
+                            <tag>service</tag>
+                            <value>{$SERVICE.NAME.1}</value>
+                        </tag>
+                    </tags>
+                </trigger>
+                <trigger>
+                    <expression>{Template App Windows Services Custom:service.info[{$SERVICE.NAME.2},state].last()}&lt;&gt;{$SERVICE.STATE.EXPECTED.2}</expression>
+                    <name>Service {$SERVICE.NAME.2} is not in expected state</name>
+                    <priority>4</priority>
+                    <description>Expected: {$SERVICE.STATE.EXPECTED.2}. Current: {ITEM.LASTVALUE}</description>
+                    <tags>
+                        <tag>
+                            <tag>service</tag>
+                            <value>{$SERVICE.NAME.2}</value>
+                        </tag>
+                    </tags>
+                </trigger>
+                <trigger>
+                    <expression>{Template App Windows Services Custom:service.info[{$SERVICE.NAME.3},state].last()}&lt;&gt;{$SERVICE.STATE.EXPECTED.3}</expression>
+                    <name>Service {$SERVICE.NAME.3} is not in expected state</name>
+                    <priority>4</priority>
+                    <description>Expected: {$SERVICE.STATE.EXPECTED.3}. Current: {ITEM.LASTVALUE}</description>
+                    <tags>
+                        <tag>
+                            <tag>service</tag>
+                            <value>{$SERVICE.NAME.3}</value>
+                        </tag>
+                    </tags>
+                </trigger>
+                <trigger>
+                    <expression>{Template App Windows Services Custom:service.info[{$SERVICE.NAME.4},state].last()}&lt;&gt;{$SERVICE.STATE.EXPECTED.4}</expression>
+                    <name>Service {$SERVICE.NAME.4} is not in expected state</name>
+                    <priority>4</priority>
+                    <description>Expected: {$SERVICE.STATE.EXPECTED.4}. Current: {ITEM.LASTVALUE}</description>
+                    <tags>
+                        <tag>
+                            <tag>service</tag>
+                            <value>{$SERVICE.NAME.4}</value>
+                        </tag>
+                    </tags>
+                </trigger>
+                <trigger>
+                    <expression>{Template App Windows Services Custom:service.info[{$SERVICE.NAME.5},state].last()}&lt;&gt;{$SERVICE.STATE.EXPECTED.5}</expression>
+                    <name>Service {$SERVICE.NAME.5} is not in expected state</name>
+                    <priority>4</priority>
+                    <description>Expected: {$SERVICE.STATE.EXPECTED.5}. Current: {ITEM.LASTVALUE}</description>
+                    <tags>
+                        <tag>
+                            <tag>service</tag>
+                            <value>{$SERVICE.NAME.5}</value>
+                        </tag>
+                    </tags>
+                </trigger>
+            </triggers>
+        </template>
+    </templates>
+</zabbix_export>

@@ -1,6 +1,5 @@
 from array import array
-from functools import total_ordering
-from traceback import print_tb
+
 
 import torch
 import numpy as np
@@ -15,7 +14,9 @@ r1 = a*b
 print(r1)
 r2 = torch.mul(a,b)
 print(r2)
+# Математическое умножение матриц с транслированием
 c = torch.matmul(a,b)
+с2 = torch.mm(a,b)
 print(c)
 v = torch.LongTensor([-1,-2,-3])
 c = torch.matmul(a,v)

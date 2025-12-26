@@ -1,4 +1,4 @@
-# Десриптор данных get set
+ # Десриптор данных get set
 class Integer:
 
     @classmethod

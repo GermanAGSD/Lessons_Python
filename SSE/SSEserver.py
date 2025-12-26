@@ -4,26 +4,52 @@ from typing import List, Union, Optional
 import uvicorn
 from pydantic import BaseModel, Field
 from starlette import status
-
-from ClietnWebSocket import pravila
-from PythonBasic.lessons_1 import result
 from SSE.Models import Models
 from SSE.Database.DataBaseSqlAlchemy import engine, get_db
-from SSE.Database.DataBaseSqlAlchemyAsync import get_db_async
 from sqlalchemy.orm import Session
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
-from sqlalchemy.exc import DBAPIError
 import json
 from httpx import AsyncClient
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordBearer
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+# Разрешённые источники (можно указать Django, localhost и т.д.)
+origins = [
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    "http://192.168.19.13:8000",  # если Django тоже крутится на этом IP
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,            # или ["*"] для всех
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 Models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
+
+# Разрешённые источники (можно указать Django, localhost и т.д.)
+origins = [
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    "http://192.168.19.13:8000",  # если Django тоже крутится на этом IP
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,            # или ["*"] для всех
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class ParamsOut(BaseModel):
     params: str
@@ -113,29 +139,94 @@ class WebhookData(BaseModel):
     payload: dict
 
 
+_streams: List["Stream"] = []  # глобальный список активных подключений
+
+
 class Stream:
+    """Поток событий SSE, основанный на asyncio.Queue"""
     def __init__(self) -> None:
-        self._queue = asyncio.Queue[ServerSentEvent]()
+        self._queue: asyncio.Queue[ServerSentEvent] = asyncio.Queue()
+        self.client_ip: str | None = None
+        self.query_params: str | None = None
+        self.active: bool = True  # флаг активности клиента
 
     def __aiter__(self) -> "Stream":
         return self
 
     async def __anext__(self) -> ServerSentEvent:
-        return await self._queue.get()
+        if not self.active:
+            raise StopAsyncIteration
+        try:
+            return await self._queue.get()
+        except asyncio.CancelledError:
+            self.active = False
+            raise StopAsyncIteration
 
     async def asend(self, value: ServerSentEvent) -> None:
-        await self._queue.put(value)
+        """Отправить событие клиенту"""
+        if self.active:
+            await self._queue.put(value)
 
-_streams: List[Stream] = []
+    def close(self) -> None:
+        """Закрыть поток (например, при отключении клиента)"""
+        self.active = False
+
+# class Stream:
+#     def __init__(self) -> None:
+#         self._queue = asyncio.Queue[ServerSentEvent]()
+#
+#     def __aiter__(self) -> "Stream":
+#         return self
+#
+#     async def __anext__(self) -> ServerSentEvent:
+#         return await self._queue.get()
+#
+#     async def asend(self, value: ServerSentEvent) -> None:
+#         await self._queue.put(value)
+#
+# _streams: List[Stream] = []
+
+
+@app.get("/sse/host")
+async def sse(request: Request, db: Session = Depends(get_db)) -> EventSourceResponse:
+    # создаём и регистрируем поток клиента
+    stream = Stream()
+    stream.client_ip = request.client.host
+    stream.query_params = request.query_params.get('param', 'No params')
+    _streams.append(stream)
+
+    print(f"✅ Client connected: IP={stream.client_ip}, param={stream.query_params}")
+
+    # регистрация хоста в базе
+    regist_host(stream.query_params, db)
+
+    async def event_generator():
+        try:
+            async for event in stream:
+                yield event
+        except asyncio.CancelledError:
+            # клиент отключился
+            stream.close()
+            if stream in _streams:
+                _streams.remove(stream)
+            print(f"❌ Client disconnected: IP={stream.client_ip}, param={stream.query_params}")
+            raise
+        finally:
+            # на всякий случай — гарантированное удаление
+            if stream in _streams:
+                _streams.remove(stream)
+            stream.close()
+
+    return EventSourceResponse(event_generator(), headers={'Cache-Control': 'no-store'})
 
 
 @app.get("/comment", response_model=List[CommentsOut])
 def getComment(db: Session = Depends(get_db)):
     result = db.query(Models.Comment).all()
     return result
-
-
 # Добавим функцию для регистрации новых устройств в базе данных
+
+
 def regist_host(parammetr, db: Session):
     result = db.query(Models.Hosts).filter(Models.Hosts.params == parammetr).first()
     if result:
@@ -148,50 +239,50 @@ def regist_host(parammetr, db: Session):
         print(f"New device registered with param {parammetr}.")
 
 
-@app.get("/sse/host")
-async def sse(request: Request, db: Session = Depends(get_db),stream: Stream = Depends()) -> EventSourceResponse:
-    stream = Stream()
-    query_params = request.query_params.get('param', 'No params')
-    stream.client_ip = request.client.host
-    stream.query_params = query_params
-    _streams.append(stream)
-    print(f"Client connected: IP address: {stream.client_ip}, Query params: {stream.query_params}")
-
-    # webhook to FrontEnd
-    # Отправляем POST-запрос о подключении клиента
-    # await post_to_server(
-    #     "http://localhost:8000/sse/client-connected",
-    #     {"client_ip": stream.client_ip, "query_params": stream.query_params},
-    # )
-
-    # Проверка и регистрация хоста в базе данных
-    regist_host(stream.query_params, db)
-    async def event_generator():
-        try:
-            async for event in stream:
-                yield event
-        except asyncio.CancelledError:
-            _streams.remove(stream)
-            print(f"Client disconnected: IP address: {stream.client_ip}, Query params: {stream.query_params}")
-            raise
-
-    return EventSourceResponse(event_generator(), headers={'Cache-Control': 'no-store'})
-    try:
-        query_params = request.query_params.get('param', 'No params')
-        stream.client_ip = request.client.host
-        stream.query_params = query_params
-        _streams.append(stream)
-        print(f"Client connected: IP address: {stream.client_ip}, Query params: {stream.query_params}")
-        return EventSourceResponse(stream, headers={'Cache-Control': 'no-store'})
-    except asyncio.CancelledError:
-        _streams.remove(stream)
-        print(f"Client disconnected: IP address: {stream.client_ip}, Query params: {stream.query_params}")
-        raise
-    query_params = request.query_params.get('param', 'No params')
-    stream.client_ip = request.client.host
-    stream.query_params = query_params
-    _streams.append(stream)
-    return EventSourceResponse(stream, headers={'Cache-Control': 'no-store'})
+# @app.get("/sse/host")
+# async def sse(request: Request, db: Session = Depends(get_db),stream: Stream = Depends()) -> EventSourceResponse:
+#     stream = Stream()
+#     query_params = request.query_params.get('param', 'No params')
+#     stream.client_ip = request.client.host
+#     stream.query_params = query_params
+#     _streams.append(stream)
+#     print(f"Client connected: IP address: {stream.client_ip}, Query params: {stream.query_params}")
+#
+#     # webhook to FrontEnd
+#     # Отправляем POST-запрос о подключении клиента
+#     # await post_to_server(
+#     #     "http://localhost:8000/sse/client-connected",
+#     #     {"client_ip": stream.client_ip, "query_params": stream.query_params},
+#     # )
+#
+#     # Проверка и регистрация хоста в базе данных
+#     regist_host(stream.query_params, db)
+#     async def event_generator():
+#         try:
+#             async for event in stream:
+#                 yield event
+#         except asyncio.CancelledError:
+#             _streams.remove(stream)
+#             print(f"Client disconnected: IP address: {stream.client_ip}, Query params: {stream.query_params}")
+#             raise
+#
+#     return EventSourceResponse(event_generator(), headers={'Cache-Control': 'no-store'})
+#     try:
+#         query_params = request.query_params.get('param', 'No params')
+#         stream.client_ip = request.client.host
+#         stream.query_params = query_params
+#         _streams.append(stream)
+#         print(f"Client connected: IP address: {stream.client_ip}, Query params: {stream.query_params}")
+#         return EventSourceResponse(stream, headers={'Cache-Control': 'no-store'})
+#     except asyncio.CancelledError:
+#         _streams.remove(stream)
+#         print(f"Client disconnected: IP address: {stream.client_ip}, Query params: {stream.query_params}")
+#         raise
+#     query_params = request.query_params.get('param', 'No params')
+#     stream.client_ip = request.client.host
+#     stream.query_params = query_params
+#     _streams.append(stream)
+#     return EventSourceResponse(stream, headers={'Cache-Control': 'no-store'})
 
 # Data to webHook
 async def post_to_server(url, data):
@@ -219,19 +310,14 @@ async def send_message(host: str,data: str, event: str, stream: Stream = Depends
             await stream.asend(
                 ServerSentEvent(data=data, event=event)
             )
-# @app.post("/setvol", status_code=status.HTTP_201_CREATED)
-# async def setvol(data: float, event: str, stream: Stream = Depends()) -> None:
-#     for stream in _streams:
-#         await stream.asend(
-#             ServerSentEvent(data=data, event=event)
-#         )
+
 
 @app.post("/setvol", status_code=status.HTTP_200_OK)
 async def setvol(host: str, data: SetvolModel, stream: Stream = Depends()) -> None:
     for stream in _streams:
         if stream.query_params == host:
             await stream.asend(
-                ServerSentEvent(data=data.model_dump_json(), event="setvol")
+                ServerSentEvent(data=data.json(), event="setvol")
             )
 
 @app.post("/play", status_code=status.HTTP_200_OK)
@@ -471,4 +557,4 @@ async def login(userlog: UserCreate, db: Session = Depends(get_db)):
     }
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="192.168.1.100", port=8001)
+    uvicorn.run(app, host="192.168.19.13", port=8000)

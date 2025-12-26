@@ -28,6 +28,6 @@ def go(house, rock, attr):
     return Y
 
 
-res = go(1,0,0)
+res = go(1,0,1 )
 if res == 1:
     print(f'нравится')

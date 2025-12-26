@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>4.0</version>
+    <templates>
+        <template>
+            <template>RKeeperRefServer_THEBULL Service Monitor</template>
+            <name>RKeeperRefServer_THEBULL Service Monitor</name>
+            <description>Шаблон для мониторинга службы RKeeperRefServer_THEBULL</description>
+            <groups>
+                <group>
+                    <name>Templates</name>
+                </group>
+            </groups>
+            <items>
+                <item>
+                    <name>Состояние службы RKeeperRefServer_THEBULL</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>service.info[RKeeperRefServer_THEBULL,state]</key>
+                    <delay>30s</delay>
+                    <history>7d</history>
+                    <trends>0</trends>
+                    <value_type>INT</value_type>
+                    <valuemap>
+                        <name>Состояние службы</name>
+                    </valuemap>
+                </item>
+            </items>
+            <triggers>
+                <trigger>
+                    <expression>{RKeeperRefServer_THEBULL Service Monitor:service.info[RKeeperRefServer_THEBULL,state].last()}<>0</expression>
+                    <name>Служба RKeeperRefServer_THEBULL остановлена</name>
+                    <priority>HIGH</priority>
+                    <description>Служба RKeeperRefServer_THEBULL в настоящее время не работает. Текущий статус: {ITEM.LASTVALUE}</description>
+                </trigger>
+            </triggers>
+        </template>
+    </templates>
+    <valuemaps>
+        <valuemap>
+            <name>Состояние службы</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>работает</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>приостановлена</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>ожидает запуска</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>ожидает приостановки</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>ожидает возобновления</newvalue>
+                </mapping>
+                <mapping>
+                    <value>5</value>
+                    <newvalue>ожидает остановки</newvalue>
+                </mapping>
+                <mapping>
+                    <value>6</value>
+                    <newvalue>остановлена</newvalue>
+                </mapping>
+                <mapping>
+                    <value>7</value>
+                    <newvalue>неизвестно</newvalue>
+                </mapping>
+                <mapping>
+                    <value>255</value>
+                    <newvalue>служба не существует</newvalue>
+                </mapping>
+            </mappings>
+        </valuemap>
+    </valuemaps>
+</zabbix_export>

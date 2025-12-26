@@ -24,7 +24,7 @@ def words():
     S = ''
     for i in words:
         S += ' ' + i
-    print(S.lstrip())
+    print(S.strip())
 
 words()
 

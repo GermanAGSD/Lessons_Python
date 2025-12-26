@@ -1,4 +1,4 @@
-from idlelib.debugger_r import close_subprocess_debugger
+
 from accessify import private, protected
 
 # Property - Свойства

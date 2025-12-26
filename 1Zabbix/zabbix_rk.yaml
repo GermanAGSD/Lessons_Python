@@ -1,0 +1,47 @@
+zabbix_export:
+  version: '6.0'
+  date: '2021-11-21T21:42:09Z'
+  groups:
+    -
+      uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+    -
+      uuid: 846977d1dfed4968bc5f8bdb363285bc
+      name: 'Templates/Operating systems'
+  templates:
+    -
+      uuid: 95a90af1d5b64afaa24b9f917e25e4ec
+      template: 'Rkeeper'
+      name: 'Rkeeper'
+
+      groups:
+        -
+          name: Templates
+        -
+          name: 'Templates/Operating systems'
+      items:
+        -
+          uuid: 3ebbab9c9434494794d49b7ebf9119f1
+          name: 'Rkeper'
+          key: service.info[RKeeperRefServer_THEBULL]
+          delay: 30s
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+#          tags:
+#            -
+#              tag: Application
+#              value: Система
+#          triggers:
+#            -
+#              uuid: e28cac3b7d914bf7b2b15027200d3006
+#              expression: '{RKeeperRefServer Monitor:service.info[RKeeperRefServer_THEBULL].last()}=0'
+#              name: 'RKeeperRefServer_THEBULL Status'
+#              priority: AVERAGE
+##              dependencies:
+##                -
+##                  name: 'Processor Queue Length > 10 (3 min)'
+##                  expression: 'avg(/OS Windows Server/perf_counter["\System\Processor Queue Length",60],3m)>10'
+#              tags:
+#                -
+#                  tag: Производительность

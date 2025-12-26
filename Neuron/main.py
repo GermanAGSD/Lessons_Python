@@ -2,8 +2,6 @@
 # Тензор должен иметь один тип данных
 import torch
 
-from SSE.SSEserver import ACCESS_TOKEN_EXPIRE_DAYS
-
 # Пороговая функция
 def act(x):
     return 0 if x < 0.5 else 1

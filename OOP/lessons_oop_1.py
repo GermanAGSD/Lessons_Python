@@ -1,4 +1,5 @@
 from typing import Any
+
 class Point:
     color = 'red'
     circle = 2
@@ -18,8 +19,10 @@ class Point:
 
     def get_coords(self) -> dict[Any, Any]:
         return {"self x": self.x, "self y":self.y}
-        # return dict[self.x, self.y]
 
 pt = Point(1,2)
 pt.set_coords(1,2)
 print(pt.get_coords())
+
+setattr(Point, 'prop', 1)
+getattr(Point, 'prop', False)

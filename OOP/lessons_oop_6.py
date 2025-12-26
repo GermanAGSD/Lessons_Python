@@ -1,3 +1,5 @@
+# Механизм инкапсуляция
+
 from accessify import private, protected
 from typing import Any, Optional
 

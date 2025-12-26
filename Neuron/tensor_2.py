@@ -4,7 +4,6 @@ from functools import total_ordering
 import torch
 import numpy as np
 
-from SSE.SSEserver import print_active_hosts
 
 # Матрица из нулей
 tz = torch.zeros(2,3, dtype=torch.int32)
