@@ -6,4 +6,5 @@ def execute_callback(callback, arg):
     callback(arg)
 
 # Использование
+
 execute_callback(my_callback, "Hello, world!")
