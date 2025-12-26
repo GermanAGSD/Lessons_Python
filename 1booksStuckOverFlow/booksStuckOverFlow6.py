@@ -16,11 +16,11 @@ d = {
 
 json_str = json.dumps(d)
 
-with open('../selfedu/out.json', 'w') as f:
+with open('../simple_python/out.json', 'w') as f:
     json.dump(json_str,f)
 
 # Json Чтение из файла
-with open('../selfedu/out.json', 'r') as f:
+with open('../simple_python/out.json', 'r') as f:
     d = json.load(f)
 print(d)
 

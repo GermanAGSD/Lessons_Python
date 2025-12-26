@@ -557,4 +557,4 @@ async def login(userlog: UserCreate, db: Session = Depends(get_db)):
     }
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="192.168.19.13", port=8000)
+    uvicorn.run(app, host="192.168.3.2", port=8000)

@@ -75,7 +75,7 @@ class SSEClient:
 
 
 async def main():
-    url = "http://192.168.19.13:8000/sse/host?param=SQL-RK"
+    url = "http://192.168.3.2:8000/sse/host?param=SQL-RK"
     client = SSEClient(url)
 
     # Запускаем клиента в отдельной задаче
