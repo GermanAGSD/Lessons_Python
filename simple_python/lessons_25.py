@@ -5,7 +5,7 @@ from asyncio import eager_task_factory
 def lessons_25():
     for i in range(1, 4):
         for j in range(1, 6):
-            print(f"i = {i} j = {j}", end='')
+            print(f"i = {i}, j = {j}", end='')
         print()
 
 
@@ -61,3 +61,4 @@ def lessons_25_5():
     print(zeros)
 
 lessons_25_5()
+
