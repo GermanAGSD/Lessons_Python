@@ -15,41 +15,31 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
+from faststream.rabbit.fastapi import RabbitRouter
 
-app = FastAPI()
+router = RabbitRouter("amqp://admin:admin123@172.30.30.19:5672/")
 
-# Разрешённые источники (можно указать Django, localhost и т.д.)
+app = FastAPI(lifespan=router.lifespan_context)
+
+app.include_router(router)
+
 origins = [
-    "http://127.0.0.1:8000",
-    "http://localhost:8000",
-    "http://192.168.19.13:8000",  # если Django тоже крутится на этом IP
+    "http://127.0.0.1:8080",
+    "http://localhost:8080",
+    "http://192.168.3.2:8080",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,            # или ["*"] для всех
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 Models.Base.metadata.create_all(bind=engine)
-app = FastAPI()
 
-# Разрешённые источники (можно указать Django, localhost и т.д.)
-origins = [
-    "http://127.0.0.1:8000",
-    "http://localhost:8000",
-    "http://192.168.19.13:8000",  # если Django тоже крутится на этом IP
-]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,            # или ["*"] для всех
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 class ParamsOut(BaseModel):
     params: str
@@ -133,10 +123,11 @@ class ClientDataModel(BaseModel):
     position: float
     volume: Optional[float] = None
     status: Optional[str] = None
-# Определяем модель данных для вебхука
+
+
 class WebhookData(BaseModel):
     event: str
-    payload: dict
+    data: dict | str
 
 
 _streams: List["Stream"] = []  # глобальный список активных подключений
@@ -186,7 +177,7 @@ class Stream:
 #
 # _streams: List[Stream] = []
 
-
+# http://192.168.3.2:8000/sse/host?param=sqlrk
 @app.get("/sse/host")
 async def sse(request: Request, db: Session = Depends(get_db)) -> EventSourceResponse:
     # создаём и регистрируем поток клиента
@@ -217,7 +208,16 @@ async def sse(request: Request, db: Session = Depends(get_db)) -> EventSourceRes
                 _streams.remove(stream)
             stream.close()
 
-    return EventSourceResponse(event_generator(), headers={'Cache-Control': 'no-store'})
+    return EventSourceResponse(
+        event_generator(),
+        ping=15,
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
 
 
 @app.get("/comment", response_model=List[CommentsOut])
@@ -294,8 +294,19 @@ async def post_to_server(url, data):
 @app.post("/webhook")
 async def webhook_handler(data: WebhookData):
     try:
+        data_json = {
+            # "id": random.randint(1, 1_000_000),
+            "event": data.event,
+            "message": data.data
+        }
+
+        await router.broker.publish(
+            data_json,
+            queue="orders"
+        )
+
         print(f"Received event: {data.event}")
-        print(f"Payload: {data.payload}")
+        print(f"Payload: {data.data}")
         # Обработка данных, например, запись в лог или выполнение действия
         return {"status": "success", "message": "Webhook processed successfully"}
     except Exception as e:
