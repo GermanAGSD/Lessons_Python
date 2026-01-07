@@ -243,7 +243,7 @@ async def push_sse(host: str, data, event: str) -> int:
 @app.post("/webhook")
 async def webhook_handler(data: WebhookData, request: Request):
     param = request.query_params.get("param")  # "browser"
-    print(param)
+
     await send_message(param, data="Автоматика работает", event="message")
     try:
         data_json = {

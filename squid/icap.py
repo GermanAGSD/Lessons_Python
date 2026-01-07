@@ -19,14 +19,14 @@ LDAP_HOST = "172.30.30.3"
 LDAP_PORT = 389
 BASE_DN = "DC=bull,DC=local"
 SERVICE_BIND_DN = "CN=my-service,CN=Users,DC=bull,DC=local"
-SERVICE_PASSWORD = "Nhb;ls<sr-3"
+SERVICE_PASSWORD = ""
 
 # PostgreSQL
 PG_HOST = '172.30.30.8'
 PG_PORT = 5432
-PG_USER = 'livequeue'
-PG_PASSWORD = 'a~Lvn@Ja#EV~Xuz'
-PG_DB = 'livequeue'
+PG_USER = ''
+PG_PASSWORD = ''
+PG_DB = ''
 
 # Порт ICAP-сервера
 ICAP_PORT = 1344
