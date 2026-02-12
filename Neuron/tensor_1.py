@@ -1,4 +1,4 @@
-from array import array
+ from array import array
 from functools import total_ordering
 
 import torch
