@@ -14,6 +14,9 @@ A = np.array([[1, 1, 2],
 det = np.linalg.det(A)
 print(int(det))
 
+BI = np.array([[4,-2,1], [1,6,-2],[1,0,0]])
+print(f'Determinant',np.linalg.det(BI))
+
 # _________________________________________________________________________
 # Транспонирование матрицы
 Z = np.array([[1, 1, 2],
@@ -30,7 +33,9 @@ A = np.array([[1, 1, 2],
 
 B = np.array([6, 5, 3], dtype=float)
 x = np.linalg.inv(A) @ B
+x2 = np.linalg.inv(A)
 print(x)
+print(f'Обратная матрица: ',x2)
 # [2.5 0.5 1.5]
 # _________________________________________________________________________
 
@@ -78,11 +83,14 @@ print(A[0,0])
 print(A[0,1])
 print(A[0,2])
 # Сетка вокруг решения
-xs = np.linspace(x0 - 3, x0 + 3, 60)
-ys = np.linspace(y0 - 3, y0 + 3, 60)
+
+R = 5
+xs = np.linspace(x0 - R, x0 + R, 60)
+ys = np.linspace(y0 - R, y0 + R, 60)
 
 
 X, Y = np.meshgrid(xs, ys)
+print(f'X = ', X)
 # Плоскости (выражаем z)
 Z1 = (b[0] - A[0, 0]*X - A[0, 1]*Y) / A[0, 2]     # x + y + 2z = 6
 Z2 = (b[1] - A[1, 0]*X - A[1, 1]*Y) / A[1, 2]     # x - y + 2z = 5
