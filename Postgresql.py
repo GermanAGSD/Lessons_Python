@@ -35,7 +35,7 @@
 #         conn = psycopg2.connect(host='172.30.30.19', port='5431', database='fastapi', user='postgres',
 #                                 password='password123', cursor_factory=RealDictCursor)
 #         # conn = psycopg2.connect(host='172.30.30.8', port='5432', database='livequeue', user='livequeue',
-#         #                         password='a~Lvn@Ja#EV~Xu$z', cursor_factory=RealDictCursor)
+#         #                         password=, cursor_factory=RealDictCursor)
 #         cursor = conn.cursor()
 #         print("Database connection was succesfull!")
 #         break
